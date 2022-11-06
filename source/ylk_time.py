@@ -7,11 +7,7 @@ import ssl
 import time
 import wifi
 
-from digitalio import DigitalInOut, Direction
-from board import LED
-
-led = DigitalInOut(LED)
-led.direction = Direction.OUTPUT
+from ylk_led import led
 
 try:
     from secrets import secrets
@@ -41,8 +37,24 @@ def set_ntp_time(tz_offset = 1, attempts = 0, max_attempts = 10):
 def connect_wifi(attempts = 0, max_attempts = 10):
   try:
     led.value = True
-    wifi.radio.connect(secrets["ssid"], secrets["password"])
-    print("Connected to %s!" % secrets["ssid"])
+
+    ssid = ''
+    
+    for network in wifi.radio.start_scanning_networks():
+      if network.ssid in secrets['networks']:
+        print("Found known network: {}".format(network.ssid))
+        ssid = network.ssid
+        wifi.radio.stop_scanning_networks()
+        break
+
+    if ssid == '':
+      print("No known networks found")
+      return
+
+    print("Connecting to {}...".format(ssid))
+    wifi.radio.connect(ssid, secrets['networks'][ssid])
+    print("Connected to {}...".format(ssid))
+    
     print("Ping 1.1.1.1", wifi.radio.ping(ipaddress.ip_address("1.1.1.1")))
   except Exception as e:
     led.value = False
