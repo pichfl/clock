@@ -5,6 +5,7 @@ import busio
 import adafruit_fancyled.adafruit_fancyled as fancy
 
 from adafruit_is31fl3741.adafruit_rgbmatrixqt import Adafruit_RGBMatrixQT
+from random import random
 
 class Display():
   def __init__(self, scl, sda, addresses, global_current = 255, led_scaling = 255):
@@ -38,7 +39,7 @@ class Display():
     return max(0.01, min(lux, self.max_lux) / self.max_lux)
 
   @property
-  def totalWidth(self):
+  def total_width(self):
     return self.displayWidth * len(self.displays)
   
   @property
@@ -62,8 +63,8 @@ class Display():
   def draw(self, matrix):
     if (len(matrix) != self.display_height):
       raise ValueError("Matrix height must be %d" % self.display_height)
-    if (len(matrix[0]) != self.totalWidth):
-      raise ValueError("Matrix width must be %d" % self.totalWidth)
+    if (len(matrix[0]) != self.total_width):
+      raise ValueError("Matrix width must be %d" % self.total_width)
 
     self.global_current = int(self.brightness * 0xFF)
   
@@ -71,16 +72,17 @@ class Display():
     saturation = 1.0
     value = 1.0
 
-    on_color = fancy.gamma_adjust(
-      fancy.CHSV(
-        hue, saturation, value), 
-      gamma_value=2.2
-    ).pack()
-
     for display in self.displays:
       for displayX in range(self.displayWidth):
-        for y in range(self.display_height):
-          x = displayX + (self.displayWidth * self.displays.index(display))
+        for display_y in range(self.display_height):
+          on_color = fancy.gamma_adjust(
+            fancy.CHSV(
+              hue * 0.7 + hue * 0.3 * random(), saturation, value), 
+            gamma_value=2.2
+          ).pack()
+
+          x = self.total_width - 1 - (displayX + (self.displayWidth * self.displays.index(display)))
+          y = self.display_height - display_y - 1
   
-          display.pixel(displayX, y, on_color if matrix[y][x] == 1 else 0x000000)
+          display.pixel(displayX, display_y, on_color if matrix[y][x] == 1 else 0x000000)
       display.show()
