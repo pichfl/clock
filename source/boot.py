@@ -1,6 +1,8 @@
-from digitalio import DigitalInOut, Direction
-from board import LED
+from ylk_led import led
+from code import main
 
-led = DigitalInOut(LED)
-led.direction = Direction.OUTPUT
 led.value = True
+
+sleep(1)
+
+main()
